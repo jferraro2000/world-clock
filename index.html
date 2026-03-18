@@ -68,7 +68,7 @@ body {
   margin-bottom: 10px;
 }
 
-/* Time container */
+/* Time */
 .time {
   display: flex;
   justify-content: center;
@@ -94,7 +94,7 @@ body {
   transition: transform 0.4s ease-in-out;
 }
 
-/* Each digit */
+/* Digit */
 .digit {
   height: 1.2em;
 }
@@ -146,7 +146,7 @@ function buildDigitSlot(char) {
 
   return `
     <div class="digit-slot">
-      <div class="digit-column" data-value="${char}">
+      <div class="digit-column" data-value="${char}" style="transform: translateY(-${char * 1.2}em)">
         ${digits}
       </div>
     </div>
@@ -165,7 +165,7 @@ function renderTime(container, timeStr) {
   const chars = timeStr.split("");
   let colIndex = 0;
 
-  chars.forEach((char, i) => {
+  chars.forEach((char) => {
     if (!/[0-9]/.test(char)) return;
 
     const col = existing[colIndex];
