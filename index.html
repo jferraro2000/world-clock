@@ -23,16 +23,13 @@ body {
   background: var(--bg);
   color: var(--primary);
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-
   display: flex;
   justify-content: center;
   align-items: center;
-
   height: 100vh;
   text-align: center;
 }
 
-/* Splash */
 #splash {
   position: fixed;
   inset: 0;
@@ -45,58 +42,49 @@ body {
   font-weight: 600;
 }
 
-/* Container */
 .container {
   width: 100%;
   max-width: 420px;
   padding: 20px;
 }
 
-/* Title */
+/* BIG TITLE (same as time) */
 .title {
-  font-size: 22px;
+  font-size: 52px;
   font-weight: 700;
   margin-bottom: 30px;
-}
-
-/* City Block */
-.city-block {
-  margin-bottom: 40px;
 }
 
 /* City */
 .city {
   font-size: 36px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
-/* Date */
-.date {
+/* Date + offset */
+.meta {
   font-size: 16px;
   color: var(--secondary);
   margin-bottom: 10px;
 }
 
-/* Time */
+/* Time container */
 .time {
-  font-size: 52px; /* slightly smaller for perfect fit */
+  font-size: 52px;
   font-weight: 600;
   letter-spacing: 1.5px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
 
+/* Digit animation */
+.digit {
   display: inline-block;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-/* Smooth animation */
-.time.fade-out {
+.digit.change {
+  transform: translateY(-8px);
   opacity: 0;
-  transform: translateY(3px);
-}
-
-.time.fade-in {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 /* Divider */
@@ -117,77 +105,107 @@ body {
 
   <div class="title">JoJo’s World Clock</div>
 
-  <div class="city-block">
+  <div>
     <div class="city">🇺🇸 Los Angeles</div>
-    <div class="date" id="date-la"></div>
+    <div class="meta" id="meta-la"></div>
     <div class="time" id="la"></div>
   </div>
 
   <div class="divider"></div>
 
-  <div class="city-block">
+  <div>
     <div class="city">🇹🇼 Taipei</div>
-    <div class="date" id="date-taipei"></div>
+    <div class="meta" id="meta-taipei"></div>
     <div class="time" id="taipei"></div>
   </div>
 
 </div>
 
 <script>
+function formatParts(date, timeZone) {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
+
+  return formatter.formatToParts(date)
+    .map(p => p.value)
+    .join('');
+}
+
 function formatDate(date, timeZone) {
   return new Intl.DateTimeFormat("en-US", {
-    timeZone: timeZone,
+    timeZone,
     weekday: "long",
     month: "long",
     day: "numeric"
   }).format(date);
 }
 
-function formatTime(date, timeZone) {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: timeZone,
-    hour: 'numeric',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true
-  }).format(date);
+/* Digit-by-digit render */
+function renderDigits(container, newTime) {
+  const oldDigits = container.querySelectorAll(".digit");
+
+  // First render
+  if (oldDigits.length === 0) {
+    container.innerHTML = newTime.split("").map(c =>
+      `<span class="digit">${c}</span>`
+    ).join("");
+    return;
+  }
+
+  const newChars = newTime.split("");
+
+  newChars.forEach((char, i) => {
+    const digit = oldDigits[i];
+
+    if (!digit) return;
+
+    if (digit.textContent !== char) {
+      digit.classList.add("change");
+
+      setTimeout(() => {
+        digit.textContent = char;
+        digit.classList.remove("change");
+      }, 120);
+    }
+  });
 }
 
-function animateUpdate(element, newValue) {
-  if (element.textContent === newValue) return;
+/* Time difference */
+function getOffsetHours(date, tz1, tz2) {
+  const d1 = new Date(date.toLocaleString("en-US", { timeZone: tz1 }));
+  const d2 = new Date(date.toLocaleString("en-US", { timeZone: tz2 }));
 
-  element.classList.add("fade-out");
-
-  setTimeout(() => {
-    element.textContent = newValue;
-    element.classList.remove("fade-out");
-    element.classList.add("fade-in");
-
-    setTimeout(() => {
-      element.classList.remove("fade-in");
-    }, 150);
-
-  }, 75);
+  return Math.round((d2 - d1) / (1000 * 60 * 60));
 }
 
-function updateTime() {
+function update() {
   const now = new Date();
 
-  const laTime = formatTime(now, "America/Los_Angeles");
-  const taipeiTime = formatTime(now, "Asia/Taipei");
+  const laTime = formatParts(now, "America/Los_Angeles");
+  const taipeiTime = formatParts(now, "Asia/Taipei");
+
+  renderDigits(document.getElementById("la"), laTime);
+  renderDigits(document.getElementById("taipei"), taipeiTime);
 
   const laDate = formatDate(now, "America/Los_Angeles");
   const taipeiDate = formatDate(now, "Asia/Taipei");
 
-  animateUpdate(document.getElementById("la"), laTime);
-  animateUpdate(document.getElementById("taipei"), taipeiTime);
+  const diff = getOffsetHours(now, "America/Los_Angeles", "Asia/Taipei");
 
-  document.getElementById("date-la").textContent = laDate;
-  document.getElementById("date-taipei").textContent = taipeiDate;
+  document.getElementById("meta-la").textContent =
+    `${laDate} • ${diff > 0 ? "+" : ""}${diff} hrs vs Taipei`;
+
+  document.getElementById("meta-taipei").textContent =
+    `${taipeiDate} • ${-diff > 0 ? "+" : ""}${-diff} hrs vs LA`;
 }
 
-setInterval(updateTime, 1000);
-updateTime();
+setInterval(update, 1000);
+update();
 
 /* Splash */
 window.addEventListener("load", () => {
