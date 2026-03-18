@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {
+  margin: 0;
+  background: black;
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.container {
+  display: flex;
+  gap: 50px;
+  text-align: center;
+}
+.city {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+.time {
+  font-size: 48px;
+  font-weight: bold;
+  font-family: monospace;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div>
+    <div class="city">🇺🇸 Los Angeles</div>
+    <div class="time" id="la"></div>
+  </div>
+  <div>
+    <div class="city">🇹🇼 Taipei</div>
+    <div class="time" id="taipei"></div>
+  </div>
+</div>
+
+<script>
+function updateTime() {
+  const now = new Date();
+
+  document.getElementById("la").textContent =
+    now.toLocaleTimeString("en-US", { timeZone: "America/Los_Angeles" });
+
+  document.getElementById("taipei").textContent =
+    now.toLocaleTimeString("en-US", { timeZone: "Asia/Taipei" });
+}
+
+setInterval(updateTime, 1000);
+updateTime();
+</script>
+
+</body>
+</html>
