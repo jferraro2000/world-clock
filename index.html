@@ -4,7 +4,7 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-<title>World Clock</title>
+<title>JoJo's World Clock</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -52,6 +52,13 @@ body {
   padding: 20px;
 }
 
+/* Title */
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 30px;
+}
+
 /* City Block */
 .city-block {
   margin-bottom: 40px;
@@ -72,19 +79,19 @@ body {
 
 /* Time */
 .time {
-  font-size: 56px;
+  font-size: 52px; /* slightly smaller for perfect fit */
   font-weight: 600;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 
   display: inline-block;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
-/* Animation states */
+/* Smooth animation */
 .time.fade-out {
   opacity: 0;
-  transform: translateY(5px);
+  transform: translateY(3px);
 }
 
 .time.fade-in {
@@ -104,9 +111,11 @@ body {
 
 <body>
 
-<div id="splash"> World Clock</div>
+<div id="splash"> JoJo's World Clock</div>
 
 <div class="container" id="app" style="display:none;">
+
+  <div class="title">JoJo’s World Clock</div>
 
   <div class="city-block">
     <div class="city">🇺🇸 Los Angeles</div>
@@ -145,6 +154,8 @@ function formatTime(date, timeZone) {
 }
 
 function animateUpdate(element, newValue) {
+  if (element.textContent === newValue) return;
+
   element.classList.add("fade-out");
 
   setTimeout(() => {
@@ -154,9 +165,9 @@ function animateUpdate(element, newValue) {
 
     setTimeout(() => {
       element.classList.remove("fade-in");
-    }, 200);
+    }, 150);
 
-  }, 100);
+  }, 75);
 }
 
 function updateTime() {
@@ -183,7 +194,7 @@ window.addEventListener("load", () => {
   setTimeout(() => {
     document.getElementById("splash").style.display = "none";
     document.getElementById("app").style.display = "block";
-  }, 700);
+  }, 600);
 });
 </script>
 
