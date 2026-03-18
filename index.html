@@ -2,45 +2,109 @@
 
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<!-- App Title -->
+
+<title>World Clock</title>
+
+<!-- iOS App Settings -->
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<!-- App Icon -->
+
+<link rel="apple-touch-icon" href="icon.png">
+
 <style>
+:root {
+  --bg: #000000;
+  --primary: #ffffff;
+  --secondary: #8e8e93;
+}
+
 body {
   margin: 0;
-  background: black;
-  color: white;
+  background: var(--bg);
+  color: var(--primary);
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
 }
-.container {
+
+/* Splash Screen */
+#splash {
+  position: fixed;
+  inset: 0;
+  background: black;
   display: flex;
-  gap: 50px;
-  text-align: center;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  font-size: 24px;
+  font-weight: 600;
 }
+
+/* Main Container */
+.container {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+}
+
+/* City Block */
+.city-block {
+  margin-bottom: 50px;
+}
+
+/* City Label */
 .city {
-  font-size: 22px;
-  margin-bottom: 12px;
+  font-size: 18px;
+  color: var(--secondary);
+  margin-bottom: 8px;
 }
+
+/* Time */
 .time {
-  font-size: 48px;
-  font-weight: bold;
-  font-family: monospace;
+  font-size: 64px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: #1c1c1e;
+  margin: 30px 0;
 }
 </style>
+
 </head>
+
 <body>
 
-<div class="container">
-  <div>
+<!-- Splash Screen -->
+
+<div id="splash"> World Clock</div>
+
+<div class="container" id="app" style="display:none;">
+
+  <div class="city-block">
     <div class="city">🇺🇸 Los Angeles</div>
     <div class="time" id="la"></div>
   </div>
-  <div>
+
+  <div class="divider"></div>
+
+  <div class="city-block">
     <div class="city">🇹🇼 Taipei</div>
     <div class="time" id="taipei"></div>
   </div>
+
 </div>
 
 <script>
@@ -48,14 +112,29 @@ function updateTime() {
   const now = new Date();
 
   document.getElementById("la").textContent =
-    now.toLocaleTimeString("en-US", { timeZone: "America/Los_Angeles" });
+    now.toLocaleTimeString("en-US", {
+      timeZone: "America/Los_Angeles",
+      hour12: true
+    });
 
   document.getElementById("taipei").textContent =
-    now.toLocaleTimeString("en-US", { timeZone: "Asia/Taipei" });
+    now.toLocaleTimeString("en-US", {
+      timeZone: "Asia/Taipei",
+      hour12: true
+    });
 }
 
+// Start clock
 setInterval(updateTime, 1000);
 updateTime();
+
+// Fake native-style splash delay
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    document.getElementById("splash").style.display = "none";
+    document.getElementById("app").style.display = "block";
+  }, 800);
+});
 </script>
 
 </body>
