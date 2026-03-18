@@ -13,8 +13,8 @@
 
 <style>
 :root {
-  --bg: #000000;
-  --primary: #ffffff;
+  --bg: #000;
+  --primary: #fff;
   --secondary: #8e8e93;
 }
 
@@ -48,50 +48,62 @@ body {
   padding: 20px;
 }
 
-/* BIG TITLE (same as time) */
+/* Title */
 .title {
   font-size: 52px;
   font-weight: 700;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
 }
 
 /* City */
 .city {
-  font-size: 36px;
+  font-size: 34px;
   margin-bottom: 4px;
 }
 
-/* Date + offset */
+/* Meta */
 .meta {
-  font-size: 16px;
+  font-size: 15px;
   color: var(--secondary);
   margin-bottom: 10px;
 }
 
 /* Time container */
 .time {
-  font-size: 52px;
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  font-size: 50px;
   font-weight: 600;
-  letter-spacing: 1.5px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-/* Digit animation */
-.digit {
-  display: inline-block;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+/* Digit slot */
+.digit-slot {
+  position: relative;
+  width: 0.6em;
+  height: 1.2em;
+  overflow: hidden;
 }
 
-.digit.change {
-  transform: translateY(-8px);
-  opacity: 0;
+/* Digit column */
+.digit-column {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: transform 0.4s ease-in-out;
+}
+
+/* Each digit */
+.digit {
+  height: 1.2em;
 }
 
 /* Divider */
 .divider {
   height: 1px;
   background: #1c1c1e;
-  margin: 30px 0;
+  margin: 25px 0;
 }
 </style>
 
@@ -122,86 +134,94 @@ body {
 </div>
 
 <script>
-function formatParts(date, timeZone) {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone,
+function buildDigitSlot(char) {
+  if (!/[0-9]/.test(char)) {
+    return `<span>${char}</span>`;
+  }
+
+  let digits = "";
+  for (let i = 0; i <= 9; i++) {
+    digits += `<div class="digit">${i}</div>`;
+  }
+
+  return `
+    <div class="digit-slot">
+      <div class="digit-column" data-value="${char}">
+        ${digits}
+      </div>
+    </div>
+  `;
+}
+
+function renderTime(container, timeStr) {
+  const existing = container.querySelectorAll(".digit-column");
+
+  // First render
+  if (existing.length === 0) {
+    container.innerHTML = timeStr.split("").map(buildDigitSlot).join("");
+    return;
+  }
+
+  const chars = timeStr.split("");
+  let colIndex = 0;
+
+  chars.forEach((char, i) => {
+    if (!/[0-9]/.test(char)) return;
+
+    const col = existing[colIndex];
+    const newVal = parseInt(char);
+    const oldVal = parseInt(col.dataset.value);
+
+    if (newVal !== oldVal) {
+      col.style.transform = `translateY(-${newVal * 1.2}em)`;
+      col.dataset.value = newVal;
+    }
+
+    colIndex++;
+  });
+}
+
+function formatTime(date, tz) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
     hour: 'numeric',
     minute: '2-digit',
     second: '2-digit',
     hour12: true
-  });
-
-  return formatter.formatToParts(date)
-    .map(p => p.value)
-    .join('');
+  }).format(date);
 }
 
-function formatDate(date, timeZone) {
+function formatDate(date, tz) {
   return new Intl.DateTimeFormat("en-US", {
-    timeZone,
+    timeZone: tz,
     weekday: "long",
     month: "long",
     day: "numeric"
   }).format(date);
 }
 
-/* Digit-by-digit render */
-function renderDigits(container, newTime) {
-  const oldDigits = container.querySelectorAll(".digit");
-
-  // First render
-  if (oldDigits.length === 0) {
-    container.innerHTML = newTime.split("").map(c =>
-      `<span class="digit">${c}</span>`
-    ).join("");
-    return;
-  }
-
-  const newChars = newTime.split("");
-
-  newChars.forEach((char, i) => {
-    const digit = oldDigits[i];
-
-    if (!digit) return;
-
-    if (digit.textContent !== char) {
-      digit.classList.add("change");
-
-      setTimeout(() => {
-        digit.textContent = char;
-        digit.classList.remove("change");
-      }, 120);
-    }
-  });
-}
-
-/* Time difference */
-function getOffsetHours(date, tz1, tz2) {
+function getOffset(date, tz1, tz2) {
   const d1 = new Date(date.toLocaleString("en-US", { timeZone: tz1 }));
   const d2 = new Date(date.toLocaleString("en-US", { timeZone: tz2 }));
-
-  return Math.round((d2 - d1) / (1000 * 60 * 60));
+  return Math.round((d2 - d1) / 3600000);
 }
 
 function update() {
   const now = new Date();
 
-  const laTime = formatParts(now, "America/Los_Angeles");
-  const taipeiTime = formatParts(now, "Asia/Taipei");
+  const la = formatTime(now, "America/Los_Angeles");
+  const tp = formatTime(now, "Asia/Taipei");
 
-  renderDigits(document.getElementById("la"), laTime);
-  renderDigits(document.getElementById("taipei"), taipeiTime);
+  renderTime(document.getElementById("la"), la);
+  renderTime(document.getElementById("taipei"), tp);
 
-  const laDate = formatDate(now, "America/Los_Angeles");
-  const taipeiDate = formatDate(now, "Asia/Taipei");
-
-  const diff = getOffsetHours(now, "America/Los_Angeles", "Asia/Taipei");
+  const diff = getOffset(now, "America/Los_Angeles", "Asia/Taipei");
 
   document.getElementById("meta-la").textContent =
-    `${laDate} • ${diff > 0 ? "+" : ""}${diff} hrs vs Taipei`;
+    `${formatDate(now, "America/Los_Angeles")} • ${diff > 0 ? "+" : ""}${diff} hrs vs Taipei`;
 
   document.getElementById("meta-taipei").textContent =
-    `${taipeiDate} • ${-diff > 0 ? "+" : ""}${-diff} hrs vs LA`;
+    `${formatDate(now, "Asia/Taipei")} • ${-diff > 0 ? "+" : ""}${-diff} hrs vs LA`;
 }
 
 setInterval(update, 1000);
